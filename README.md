@@ -78,6 +78,7 @@ theme = "dark"
 ```
 
 </details>
+
 4. 在你刚建的 GitHub 项目里点 **Actions** 然后点左侧 **Deploy to Pages** 切换，然后点 **Run workflow** 开始第一次运行生成 Pages (看不到 Auto Install 的话，点开 .yml 文件随便加一空行保存)。这里生成完了以后一定要先检查一下你这个项目下是否生成了新的分支 **gh-pages** ，看看该分支内是否有文件夹和 html 文件。
 5. 在你刚新建的 GitHub 项目里面点 **Settings**（设置）然后下拉，找到 **GitHub Pages**, 选择 `gh-pages / root`
 保存后就能开启 GitHub Pages. 接下来就可以使用 `username.github.io/repository/name` 来访问你的静态网站了。这里的 username 是你的 GitHub 名字、repository 是你的项目名字、后面的 name 是配置文件第一行的名字，也对应 gh-pages 分支下的文件夹。
@@ -164,6 +165,7 @@ theme = "dark"
     slug = "random-board"
 ```
 </details>
+
 4. Click **Actions** in the GitHub project you just created, then click **the Deploy to Pages** toggle on the left, and then click **Run workflow** to start generating Pages for the first time.(If you don't see Auto Install, click on the .yml file and add a blank line to save it).
 After generating here, make sure to check if a new branch **gh-pages** has been created under your project and see if there are folders and html files in that branch.
 5. In the GitHub project you just created, click **Settings** and scroll down to **GitHub Pages** and select `gh-pages / root`.
