@@ -1,0 +1,57 @@
+name: Deploy to Pages
+
+on:
+#  schedule:
+#    - cron: */30 * * * *
+  workflow_dispatch:
+    inputs:
+    
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Submodule Update
+        run: |
+          git submodule update --init --recursive
+          git submodule update --remote
+          sudo apt install chromium-browser
+
+      - name: Set up Chromedriver
+        uses: nanasess/setup-chromedriver@master
+        with:
+          chromedriver-version: '77.0.3865.40'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Configuration File
+        run: |
+          cat >  ${GITHUB_WORKSPACE}/loconotion/example/example_site.toml  << EOF
+          ${{ secrets.SITE_CONFIG }}
+          EOF
+
+      - name: Install and Run
+        run: |
+          cd ${GITHUB_WORKSPACE}/loconotion
+          pip install -r requirements.txt
+          python loconotion example/example_site.toml > test.log 2>&1
+
+      - name: Deploy to Pages
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: loconotion/dist
+          CLEAN: true
+          SINGLE_COMMIT: true
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          retain_days: 2
+          keep_minimum_runs: 6
