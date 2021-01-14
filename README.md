@@ -3,7 +3,7 @@
 loconotion + Github Actions + Notion + GitHub Pages + Cloudflare Workers, Create a free website or build a blog.<br>
 GitHub 建 blog 的项目蛮多的，但是发布管理还是不够方便。Notion 本身是一款功能丰富的非常优秀的笔记软件，这个项目借助 Notion 搭建网站，做到了免费、快捷、方便、易用。一次部署再也不用管他。
 
-[English Version](#english-version_1)
+[English Version](#english-version)
 
 - 利用 Github Actions 定时运行 loconotion 抓取 Notion 页面，生成纯静态 html 页面。
 - 将生成的 html 页面推送到 GitHub 仓库，借助 GitHub Pages 生成静态 web 网站。
