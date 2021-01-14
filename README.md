@@ -8,7 +8,7 @@ GitHub 建 blog 的项目蛮多的，但是发布管理还是不够方便。Noti
 - 利用 Github Actions 定时运行 loconotion 抓取 Notion 页面，生成纯静态 html 页面。
 - 将生成的 html 页面推送到 GitHub 仓库，借助 GitHub Pages 生成静态 web 网站。
 - 最后用 Cloudflare Workers 进行反向代理，实现独立域名网站。
-- 每30分钟运行一次
+- 每20分钟运行一次
 
 # Usage
 
@@ -228,7 +228,7 @@ addEventListener('fetch', (event) => {
 - 访问速度取决于你访问 GitHub 的速度。
 - 使用 Cloudflare 免费 Workers 需要注意每日访问量。Cloudflare 具有 CDN 效果，可以一定程度增加访问速度
 - 本项目模版只是一个快速搭建的项目，核心项目才是抓取 Notion 的关键。有任何关于“抓去”“生成”的问题，建议直接去核心项目。>[loconotion](https://github.com/leoncvlt/loconotion)
-- 默认没有开启每30分钟运行，需要自行修改 `.github/workflows/pages_deploy.yml` 文件，将唯一两个“#”号去掉就能开启
+- 默认没有开启每20分钟运行，需要自行修改 `.github/workflows/pages_deploy.yml` 文件，将唯一两个“#”号去掉就能开启
 
 # English Version
 by [TechCrunch](https://www.deepl.com/)
@@ -236,7 +236,7 @@ by [TechCrunch](https://www.deepl.com/)
 - Use Github Actions to run loconotion regularly to crawl Notion pages and generate pure static html pages.
 - Push the generated html pages to the GitHub repository and generate a static web site with GitHub Pages.
 - Finally, reverse proxy with Cloudflare Workers to implement a separate domain site.
-- Runs every 30 minutes
+- Runs every 20 minutes
 
 ### Usage
 
@@ -458,7 +458,7 @@ addEventListener('fetch', (event) => {
 - The speed of access depends on how fast you can access GitHub.
 - Using Cloudflare free workers need to pay attention to the number of daily visits. cloudflare has a CDN effect, which can increase the speed of access to some extent.
 - This project template is just a quick build project, the core project is the key to capture Notion. If you have any questions about "crawling" and "generation", we suggest you go directly to the core project. >[loconotion](https://github.com/leoncvlt/loconotion)
-- You need to modify the `.github/workflows/pages_deploy.yml` file by yourself and remove the only two "#" signs to enable it.
+- The default is not enabled to run every 20 minutes, you need to modify the `.github/workflows/pages_deploy.yml` file, remove the only two "#" signs to enable.
 
 # Acknowledgments
 - [loconotion](https://github.com/leoncvlt/loconotion)
