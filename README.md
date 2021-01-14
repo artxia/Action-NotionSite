@@ -83,11 +83,151 @@ theme = "dark"
 5. 在你刚新建的 GitHub 项目里面点 **Settings**（设置）然后下拉，找到 **GitHub Pages**, 选择 `gh-pages / root`
 保存后就能开启 GitHub Pages. 接下来就可以使用 `username.github.io/repository/name` 来访问你的静态网站了。这里的 username 是你的 GitHub 名字、repository 是你的项目名字、后面的 name 是配置文件第一行的名字，也对应 gh-pages 分支下的文件夹。
 6. 可选。注册并在 Cloudflare 上新增你的域名。新建 Workers， 使用下面的代码对 `username.github.io/repository/name` 进行反代。然后对应域名新建路由对应 Workers 即可实现域名访问。这一步网上很多教程。
+<details>
+<summary>workers.js</summary>
+
+from:[booster.js](https://github.com/xiaoyang-liu-cs/booster.js)
+```
+const config = {
+  basic: {
+    upstream: 'https://en.wikipedia.org/',
+    mobileRedirect: 'https://en.m.wikipedia.org/',
+  },
+
+  firewall: {
+    blockedRegion: ['CN', 'KP', 'SY', 'PK', 'CU'],
+    blockedIPAddress: [],
+    scrapeShield: true,
+  },
+
+  routes: {
+    TW: 'https://zh.wikipedia.org/',
+    HK: 'https://zh.wikipedia.org/',
+    FR: 'https://fr.wikipedia.org/',
+  },
+
+  optimization: {
+    cacheEverything: false,
+    cacheTtl: 5,
+    mirage: true,
+    polish: 'off',
+    minify: {
+      javascript: true,
+      css: true,
+      html: true,
+    },
+  },
+};
+
+async function isMobile(userAgent) {
+  const agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod'];
+  return agents.any((agent) => userAgent.indexOf(agent) > 0);
+}
+
+async function fetchAndApply(request) {
+  const region = request.headers.get('cf-ipcountry') || '';
+  const ipAddress = request.headers.get('cf-connecting-ip') || '';
+  const userAgent = request.headers.get('user-agent') || '';
+
+  if (region !== '' && config.firewall.blockedRegion.includes(region.toUpperCase())) {
+    return new Response(
+      'Access denied: booster.js is not available in your region.',
+      {
+        status: 403,
+      },
+    );
+  } if (ipAddress !== '' && config.firewall.blockedIPAddress.includes(ipAddress)) {
+    return new Response(
+      'Access denied: Your IP address is blocked by booster.js.',
+      {
+        status: 403,
+      },
+    );
+  }
+
+  const requestURL = new URL(request.url);
+  let upstreamURL = null;
+
+  if (userAgent && isMobile(userAgent) === true) {
+    upstreamURL = new URL(config.basic.mobileRedirect);
+  } else if (region && region.toUpperCase() in config.routes) {
+    upstreamURL = new URL(config.routes[region.toUpperCase()]);
+  } else {
+    upstreamURL = new URL(config.basic.upstream);
+  }
+
+  requestURL.protocol = upstreamURL.protocol;
+  requestURL.host = upstreamURL.host;
+  requestURL.pathname = upstreamURL.pathname + requestURL.pathname;
+
+  let newRequest;
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    newRequest = new Request(requestURL, {
+      cf: {
+        cacheEverything: config.optimization.cacheEverything,
+        cacheTtl: config.optimization.cacheTtl,
+        mirage: config.optimization.mirage,
+        polish: config.optimization.polish,
+        minify: config.optimization.minify,
+        scrapeShield: config.firewall.scrapeShield,
+      },
+      method: request.method,
+      headers: request.headers,
+    });
+  } else {
+    const requestBody = await request.text();
+    newRequest = new Request(requestURL, {
+      cf: {
+        cacheEverything: config.optimization.cacheEverything,
+        cacheTtl: config.optimization.cacheTtl,
+        mirage: config.optimization.mirage,
+        polish: config.optimization.polish,
+        minify: config.optimization.minify,
+        scrapeShield: config.firewall.scrapeShield,
+      },
+      method: request.method,
+      headers: request.headers,
+      body: requestBody,
+    });
+  }
+
+  const fetchedResponse = await fetch(newRequest);
+
+  const modifiedResponseHeaders = new Headers(fetchedResponse.headers);
+  if (modifiedResponseHeaders.has('x-pjax-url')) {
+    const pjaxURL = new URL(modifiedResponseHeaders.get('x-pjax-url'));
+    pjaxURL.protocol = requestURL.protocol;
+    pjaxURL.host = requestURL.host;
+    pjaxURL.pathname = pjaxURL.path.replace(requestURL.pathname, '/');
+
+    modifiedResponseHeaders.set(
+      'x-pjax-url',
+      pjaxURL.href,
+    );
+  }
+
+  return new Response(
+    fetchedResponse.body,
+    {
+      headers: modifiedResponseHeaders,
+      status: fetchedResponse.status,
+      statusText: fetchedResponse.statusText,
+    },
+  );
+}
+
+// eslint-disable-next-line no-restricted-globals
+addEventListener('fetch', (event) => {
+  event.respondWith(fetchAndApply(event.request));
+});
+```
+
+</details>
 
 # Tips
 - 访问速度取决于你访问 GitHub 的速度。
 - 使用 Cloudflare 免费 Workers 需要注意每日访问量。Cloudflare 具有 CDN 效果，可以一定程度增加访问速度
-- 本项目模版只是一个快速搭建的项目，核心项目才是抓取 Notion 的关键。有任何关于“抓去”“生成”的问题，建议直接去核心项目。[loconotion](https://github.com/leoncvlt/loconotion)
+- 本项目模版只是一个快速搭建的项目，核心项目才是抓取 Notion 的关键。有任何关于“抓去”“生成”的问题，建议直接去核心项目。>[loconotion](https://github.com/leoncvlt/loconotion)
 - 默认没有开启每30分钟运行，需要自行修改 `.github/workflows/pages_deploy.yml` 文件，将唯一两个“#”号去掉就能开启
 
 # English Version
@@ -173,15 +313,155 @@ Save it and you'll be able to start GitHub Pages.
 Next, you can use `username.github.io/repository/name` to access your static site.
 The username is your GitHub name, the repository is the name of your project, and the name on the first line of the configuration file corresponds to the folder under the gh-pages branch.
 6. Optional. Register and add your domain on Cloudflare. Create a new Worker, use the following code to reverse proxy `username.github.io/repository/name` Then create a new route corresponding to the domain name corresponding to Workers to achieve domain access. This step online many tutorials.
+<details>
+<summary>workers.js</summary>
+
+from:[booster.js](https://github.com/xiaoyang-liu-cs/booster.js)
+```
+const config = {
+  basic: {
+    upstream: 'https://en.wikipedia.org/',
+    mobileRedirect: 'https://en.m.wikipedia.org/',
+  },
+
+  firewall: {
+    blockedRegion: ['CN', 'KP', 'SY', 'PK', 'CU'],
+    blockedIPAddress: [],
+    scrapeShield: true,
+  },
+
+  routes: {
+    TW: 'https://zh.wikipedia.org/',
+    HK: 'https://zh.wikipedia.org/',
+    FR: 'https://fr.wikipedia.org/',
+  },
+
+  optimization: {
+    cacheEverything: false,
+    cacheTtl: 5,
+    mirage: true,
+    polish: 'off',
+    minify: {
+      javascript: true,
+      css: true,
+      html: true,
+    },
+  },
+};
+
+async function isMobile(userAgent) {
+  const agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod'];
+  return agents.any((agent) => userAgent.indexOf(agent) > 0);
+}
+
+async function fetchAndApply(request) {
+  const region = request.headers.get('cf-ipcountry') || '';
+  const ipAddress = request.headers.get('cf-connecting-ip') || '';
+  const userAgent = request.headers.get('user-agent') || '';
+
+  if (region !== '' && config.firewall.blockedRegion.includes(region.toUpperCase())) {
+    return new Response(
+      'Access denied: booster.js is not available in your region.',
+      {
+        status: 403,
+      },
+    );
+  } if (ipAddress !== '' && config.firewall.blockedIPAddress.includes(ipAddress)) {
+    return new Response(
+      'Access denied: Your IP address is blocked by booster.js.',
+      {
+        status: 403,
+      },
+    );
+  }
+
+  const requestURL = new URL(request.url);
+  let upstreamURL = null;
+
+  if (userAgent && isMobile(userAgent) === true) {
+    upstreamURL = new URL(config.basic.mobileRedirect);
+  } else if (region && region.toUpperCase() in config.routes) {
+    upstreamURL = new URL(config.routes[region.toUpperCase()]);
+  } else {
+    upstreamURL = new URL(config.basic.upstream);
+  }
+
+  requestURL.protocol = upstreamURL.protocol;
+  requestURL.host = upstreamURL.host;
+  requestURL.pathname = upstreamURL.pathname + requestURL.pathname;
+
+  let newRequest;
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    newRequest = new Request(requestURL, {
+      cf: {
+        cacheEverything: config.optimization.cacheEverything,
+        cacheTtl: config.optimization.cacheTtl,
+        mirage: config.optimization.mirage,
+        polish: config.optimization.polish,
+        minify: config.optimization.minify,
+        scrapeShield: config.firewall.scrapeShield,
+      },
+      method: request.method,
+      headers: request.headers,
+    });
+  } else {
+    const requestBody = await request.text();
+    newRequest = new Request(requestURL, {
+      cf: {
+        cacheEverything: config.optimization.cacheEverything,
+        cacheTtl: config.optimization.cacheTtl,
+        mirage: config.optimization.mirage,
+        polish: config.optimization.polish,
+        minify: config.optimization.minify,
+        scrapeShield: config.firewall.scrapeShield,
+      },
+      method: request.method,
+      headers: request.headers,
+      body: requestBody,
+    });
+  }
+
+  const fetchedResponse = await fetch(newRequest);
+
+  const modifiedResponseHeaders = new Headers(fetchedResponse.headers);
+  if (modifiedResponseHeaders.has('x-pjax-url')) {
+    const pjaxURL = new URL(modifiedResponseHeaders.get('x-pjax-url'));
+    pjaxURL.protocol = requestURL.protocol;
+    pjaxURL.host = requestURL.host;
+    pjaxURL.pathname = pjaxURL.path.replace(requestURL.pathname, '/');
+
+    modifiedResponseHeaders.set(
+      'x-pjax-url',
+      pjaxURL.href,
+    );
+  }
+
+  return new Response(
+    fetchedResponse.body,
+    {
+      headers: modifiedResponseHeaders,
+      status: fetchedResponse.status,
+      statusText: fetchedResponse.statusText,
+    },
+  );
+}
+
+// eslint-disable-next-line no-restricted-globals
+addEventListener('fetch', (event) => {
+  event.respondWith(fetchAndApply(event.request));
+});
+```
+
+</details>
 
 ### Tips
 - The speed of access depends on how fast you can access GitHub.
 - Using Cloudflare free workers need to pay attention to the number of daily visits. cloudflare has a CDN effect, which can increase the speed of access to some extent.
-- This project template is just a quick build project, the core project is the key to capture Notion. If you have any questions about "crawling" and "generation", we suggest you go directly to the core project.[loconotion](https://github.com/leoncvlt/loconotion)
+- This project template is just a quick build project, the core project is the key to capture Notion. If you have any questions about "crawling" and "generation", we suggest you go directly to the core project. >[loconotion](https://github.com/leoncvlt/loconotion)
 - You need to modify the `.github/workflows/pages_deploy.yml` file by yourself and remove the only two "#" signs to enable it.
 
 # Acknowledgments
-[loconotion](https://github.com/leoncvlt/loconotion)
-
+- [loconotion](https://github.com/leoncvlt/loconotion)
+- [booster.js](https://github.com/xiaoyang-liu-cs/booster.js)
 # License
 [MIT](https://github.com/artxia/Action-NotionSite/blob/main/LICENSE) © XIA
