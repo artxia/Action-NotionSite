@@ -7,7 +7,7 @@ GitHub 建 blog 的项目蛮多的，但是发布管理还是不够方便。Noti
 
 - 利用 Github Actions 定时运行 loconotion 抓取 Notion 页面，生成纯静态 html 页面。
 - 将生成的 html 页面推送到 GitHub 仓库，借助 GitHub Pages 生成静态 web 网站。
-- 最后用 Cloudflare Workers 进行反向代理，实现独立域名网站。
+- 可选，最后用 Cloudflare Workers 进行反向代理，实现独立域名网站。
 - 每20分钟运行一次
 
 # Usage
@@ -82,7 +82,7 @@ theme = "dark"
 4. 在你刚建的 GitHub 项目里点 **Actions** 然后点左侧 **Deploy to Pages** 切换，然后点 **Run workflow** 开始第一次运行生成 Pages (看不到 Auto Install 的话，点开 .yml 文件随便加一空行保存)。这里生成完了以后一定要先检查一下你这个项目下是否生成了新的分支 **gh-pages** ，看看该分支内是否有文件夹和 html 文件。
 5. 在你刚新建的 GitHub 项目里面点 **Settings**（设置）然后下拉，找到 **GitHub Pages**, 选择 `gh-pages / root`
 保存后就能开启 GitHub Pages. 接下来就可以使用 `username.github.io/repository/name` 来访问你的静态网站了。这里的 username 是你的 GitHub 名字、repository 是你的项目名字、后面的 name 是配置文件第一行的名字，也对应 gh-pages 分支下的文件夹。
-6. 可选。注册并在 Cloudflare 上新增你的域名。新建 Workers， 使用下面的代码对 `username.github.io/repository/name` 进行反代。然后对应域名新建路由对应 Workers 即可实现域名访问。这一步网上很多教程。
+6. 可选。注册并在 Cloudflare 上新增你的域名。新建 Workers， 使用下面的代码对 `username.github.io/repository/name` 进行反代。然后对应域名新建路由对应 Workers 即可实现域名访问。这一步网上很多教程。（如果你建立的是主 GitHub Pages 仓库`<user>.github.io`，则可以直接使用 GitHub Pages 自带的 Custom domain 来实现独立域名。[GitHub 文档](https://docs.github.com/en/github/working-with-github-pages/configuring-a-custom-domain-for-your-github-pages-site)）
 <details>
 <summary>workers.js</summary>
 
@@ -235,7 +235,7 @@ by [TechCrunch](https://www.deepl.com/)
 
 - Use Github Actions to run loconotion regularly to crawl Notion pages and generate pure static html pages.
 - Push the generated html pages to the GitHub repository and generate a static web site with GitHub Pages.
-- Finally, reverse proxy with Cloudflare Workers to implement a separate domain site.
+- Optional. Finally, reverse proxy with Cloudflare Workers to implement a separate domain site.
 - Runs every 20 minutes
 
 ### Usage
@@ -312,7 +312,7 @@ After generating here, make sure to check if a new branch **gh-pages** has been 
 Save it and you'll be able to start GitHub Pages.
 Next, you can use `username.github.io/repository/name` to access your static site.
 The username is your GitHub name, the repository is the name of your project, and the name on the first line of the configuration file corresponds to the folder under the gh-pages branch.
-6. Optional. Register and add your domain on Cloudflare. Create a new Worker, use the following code to reverse proxy `username.github.io/repository/name` Then create a new route corresponding to the domain name corresponding to Workers to achieve domain access. This step online many tutorials.
+6. Optional. Register and add your domain on Cloudflare. Create a new Worker, use the following code to reverse proxy `username.github.io/repository/name` Then create a new route corresponding to the domain name corresponding to Workers to achieve domain access. This step online many tutorials.(If you are setting up the main GitHub Pages repository `<user>.github.io`, you can directly use the Custom domain that comes with GitHub Pages to implement a separate domain. [GitHub Docs](https://docs.github.com/en/github/working-with-github-pages/configuring-a-custom-domain-for-your-github-pages-site))
 <details>
 <summary>workers.js</summary>
 
