@@ -22,12 +22,9 @@ jobs:
         run: |
           git submodule update --init --recursive
           git submodule update --remote
-          sudo apt install chromium-browser
-
-      - name: Set up Chromedriver
-        uses: nanasess/setup-chromedriver@master
-        with:
-          chromedriver-version: '77.0.3865.40'
+          sudo apt-get -y update
+          sudo apt-get -y install chromium-browser
+          sudo apt-get -y install google-chrome-stable
 
       - name: Set up Python
         uses: actions/setup-python@v2
