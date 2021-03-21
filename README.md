@@ -5,6 +5,8 @@ GitHub 建 blog 的项目蛮多的，但是发布管理还是不够方便。Noti
 
 [English Version](#english-version)
 
+Examples 示例站 [leoncvlt.com](https://leoncvlt.com/)
+
 - 利用 Github Actions 定时运行 loconotion 抓取 Notion 页面，生成纯静态 html 页面。
 - 将生成的 html 页面推送到 GitHub 仓库，借助 GitHub Pages 生成静态 web 网站。
 - 可选，最后用 Cloudflare Workers 进行反向代理，实现独立域名网站。
