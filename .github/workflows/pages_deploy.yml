@@ -18,18 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Submodule Update
-        run: |
-          git submodule update --init --recursive
-          git submodule update --remote
-          sudo apt-get -y update
-          sudo apt-get -y install chromium-browser
-          sudo apt-get -y install google-chrome-stable
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Checkout loconotion
+        uses: actions/checkout@v2
         with:
-          python-version: 3.8
+          repository: leoncvlt/loconotion
+          path: loconotion
+
+      - name: Checkout this repo
+        uses: actions/checkout@v2
+        with:
+          path: pages_repo
+
+      - name: Build Loconotion docker image
+        run: docker-compose build loconotion
+        working-directory: loconotion
 
       - name: Configuration File
         run: |
@@ -37,23 +39,27 @@ jobs:
           ${{ secrets.SITE_CONFIG }}
           EOF
 
-      - name: Install and Run
+      - name: Run Loconotion
         run: |
-          cd ${GITHUB_WORKSPACE}/loconotion
-          pip install -r requirements.txt
-          python loconotion example/example_site.toml > test.log 2>&1
+          docker-compose run \
+          -v "${GITHUB_WORKSPACE}/pages_repo/dist:/app/loconotion/dist" \
+          -v "${GITHUB_WORKSPACE}/loconotion/example/example_site.toml:/app/loconotion/site.toml" \
+          loconotion "site.toml"
+        working-directory: loconotion
 
       - name: Deploy to Pages
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: loconotion/dist
+          FOLDER: pages_repo/dist/notion
           CLEAN: true
           SINGLE_COMMIT: true
 
       - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
+        uses: Mattraks/delete-workflow-runs@v2
         with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
           retain_days: 2
           keep_minimum_runs: 6
